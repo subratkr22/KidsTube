@@ -1,0 +1,7 @@
+body.watch-mode .sidebar {
+  display: none;
+}
+
+body.watch-mode .menu-button {
+  visibility: hidden;
+}
