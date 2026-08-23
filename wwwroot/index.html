@@ -5,8 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#ffffff" />
   <title>YouTube</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/logo.css" />
   <link rel="stylesheet" href="/watch.css" />
+  <link rel="stylesheet" href="/player-controls.css" />
 </head>
 <body>
   <header class="topbar">
@@ -112,7 +115,7 @@
   <main id="watchView" class="watch-view hidden">
     <section class="watch-primary">
       <div class="player-shell">
-        <video id="player" controls playsinline preload="metadata"></video>
+        <video id="player" playsinline preload="metadata"></video>
         <button id="bigPlayButton" class="big-play hidden" aria-label="Play">▶</button>
       </div>
       <h1 id="watchTitle" class="watch-title"></h1>
@@ -145,6 +148,7 @@
   <div id="toast" class="toast hidden" role="status"></div>
 
   <script src="/app.js"></script>
+  <script src="/player-controls.js"></script>
   <script src="/thumbnail-generator.js"></script>
   <script src="/hover-preview.js"></script>
 </body>
