@@ -1,0 +1,14 @@
+.git
+.github
+.vs
+.idea
+bin
+obj
+*.user
+*.suo
+Cartoons
+Videos
+wwwroot/thumbnails/generated
+README.md
+run-*.bat
+*.log
