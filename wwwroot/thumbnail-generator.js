@@ -148,7 +148,7 @@
 
       const duration = Number.isFinite(video.duration) ? video.duration : 0;
       const targetTime = duration > 1
-        ? Math.min(Math.max(duration * 0.12, 1), 8, Math.max(0.1, duration - 0.25))
+        ? Math.min(Math.max(duration * 0.5, 0.5), Math.max(0.1, duration - 0.25))
         : 0;
 
       if (targetTime > 0.05) {
