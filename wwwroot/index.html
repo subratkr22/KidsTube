@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#ffffff" />
+  <title>KidsTube</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <button id="menuButton" class="icon-button menu-button" aria-label="Toggle menu">☰</button>
+    <button id="logoButton" class="logo" aria-label="KidsTube home">
+      <span class="logo-mark">▶</span>
+      <span class="logo-text">KidsTube</span>
+    </button>
+
+    <form id="searchForm" class="search" role="search">
+      <input id="searchInput" type="search" placeholder="Search" autocomplete="off" aria-label="Search videos" />
+      <button type="submit" aria-label="Search">⌕</button>
+    </form>
+
+    <div class="top-actions">
+      <span class="offline-badge" title="Videos are played from this computer">● Offline library</span>
+      <button id="rescanButton" class="icon-button" title="Rescan video folder" aria-label="Rescan video folder">↻</button>
+    </div>
+  </header>
+
+  <aside id="sidebar" class="sidebar">
+    <nav>
+      <button class="nav-item active" data-action="home"><span>⌂</span>Home</button>
+      <button class="nav-item" data-action="continue"><span>▶</span>Continue watching</button>
+      <button class="nav-item" data-action="random"><span>⤨</span>Play random</button>
+      <div class="nav-divider"></div>
+      <div class="nav-heading">Categories</div>
+      <div id="sidebarCategories"></div>
+    </nav>
+    <div class="sidebar-footer">Only videos from your approved local folder appear here.</div>
+  </aside>
+
+  <main id="homeView" class="main-content">
+    <div id="categoryChips" class="chips"></div>
+
+    <section id="libraryStatus" class="library-status hidden">
+      <div class="status-icon">📁</div>
+      <div>
+        <h2 id="statusTitle">Video folder not found</h2>
+        <p id="statusMessage"></p>
+      </div>
+    </section>
+
+    <section id="continueSection" class="continue-section hidden">
+      <div class="section-heading-row">
+        <h2>Continue watching</h2>
+        <button id="clearHistoryButton" class="text-button">Clear progress</button>
+      </div>
+      <div id="continueGrid" class="video-grid compact-grid"></div>
+    </section>
+
+    <section>
+      <div class="section-heading-row">
+        <h1 id="pageTitle">Home</h1>
+        <span id="videoCount" class="muted"></span>
+      </div>
+      <div id="videoGrid" class="video-grid"></div>
+      <div id="emptyState" class="empty-state hidden">
+        <div class="empty-icon">🎬</div>
+        <h2>No videos found</h2>
+        <p>Put approved videos in your KidsTube folder and press the rescan button.</p>
+      </div>
+    </section>
+  </main>
+
+  <main id="watchView" class="watch-view hidden">
+    <section class="watch-primary">
+      <div class="player-shell">
+        <video id="player" controls playsinline preload="metadata"></video>
+        <button id="bigPlayButton" class="big-play hidden" aria-label="Play">▶</button>
+      </div>
+      <h1 id="watchTitle" class="watch-title"></h1>
+      <div class="watch-meta">
+        <span id="watchCategory" class="category-pill"></span>
+        <span id="watchFileInfo" class="muted"></span>
+      </div>
+      <div class="watch-actions">
+        <button id="backHomeButton" class="soft-button">← Home</button>
+        <button id="restartButton" class="soft-button">↺ Restart</button>
+        <button id="randomButton" class="soft-button">⤨ Random video</button>
+      </div>
+    </section>
+
+    <aside class="suggestions">
+      <h2>Up next</h2>
+      <div id="suggestionList"></div>
+    </aside>
+  </main>
+
+  <div id="toast" class="toast hidden" role="status"></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
