@@ -27,6 +27,10 @@
   `;
   document.head.appendChild(style);
 
+  function watchLimitBlocked() {
+    return Boolean(window.YouTubeWatchLimit?.isBlocked?.());
+  }
+
   function idFromUrl(src) {
     try {
       const url = new URL(src, window.location.origin);
@@ -75,6 +79,8 @@
   }
 
   async function startPreview(wrapper) {
+    if (watchLimitBlocked()) return;
+
     const id = resolveVideoId(wrapper);
     if (!id || !wrapper.isConnected || !wrapper.matches(':hover')) return;
 
@@ -95,7 +101,7 @@
     wrapper.appendChild(video);
 
     const cleanupIfInactive = () => {
-      if (activeVideo !== video || activeWrapper !== wrapper || !wrapper.matches(':hover')) {
+      if (watchLimitBlocked() || activeVideo !== video || activeWrapper !== wrapper || !wrapper.matches(':hover')) {
         if (activeVideo === video) stopPreview();
         return true;
       }
@@ -107,7 +113,6 @@
 
       const duration = Number.isFinite(video.duration) ? video.duration : 0;
       if (duration > 1) {
-        // Begin a little before the static 50% thumbnail so the preview visibly moves through it.
         previewStart = Math.min(
           Math.max(duration * 0.42, 0.5),
           Math.max(0.1, duration - 0.5)
@@ -130,6 +135,11 @@
     }, { once: true });
 
     video.addEventListener('timeupdate', () => {
+      if (watchLimitBlocked()) {
+        stopPreview();
+        return;
+      }
+
       if (!Number.isFinite(video.currentTime)) return;
       if (video.currentTime >= previewStart + PREVIEW_LENGTH_SECONDS) {
         try {
@@ -141,6 +151,11 @@
     });
 
     video.addEventListener('ended', () => {
+      if (watchLimitBlocked()) {
+        stopPreview();
+        return;
+      }
+
       if (activeVideo !== video) return;
       try {
         video.currentTime = previewStart;
@@ -158,6 +173,11 @@
   }
 
   document.addEventListener('pointerover', event => {
+    if (watchLimitBlocked()) {
+      stopPreview();
+      return;
+    }
+
     const wrapper = event.target instanceof Element
       ? event.target.closest('.thumbnail')
       : null;
@@ -186,8 +206,6 @@
     if (activeWrapper === wrapper) stopPreview();
   });
 
-  // Preserve the video id when the missing server thumbnail is removed and
-  // replaced by the generated midpoint thumbnail.
   const observer = new MutationObserver(records => {
     for (const record of records) {
       if (!(record.target instanceof Element)) continue;
@@ -206,6 +224,10 @@
   });
 
   observer.observe(document.documentElement, { childList: true, subtree: true });
+
+  window.addEventListener('youtube-watch-limit-changed', event => {
+    if (event.detail?.blocked) stopPreview();
+  });
 
   window.addEventListener('blur', stopPreview);
   document.addEventListener('visibilitychange', () => {
