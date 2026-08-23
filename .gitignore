@@ -7,4 +7,6 @@ obj/
 .DS_Store
 Thumbs.db
 Videos/
+Cartoons/
 wwwroot/thumbnails/generated/
+.env
