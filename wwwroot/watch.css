@@ -1,3 +1,5 @@
+@import url('/logo.css');
+
 body.watch-mode .sidebar {
   display: none;
 }
