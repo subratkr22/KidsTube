@@ -1,0 +1,18 @@
+services:
+  youtube:
+    container_name: youtube-local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: youtube-local:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5050:8080"
+    environment:
+      Server__Url: "http://0.0.0.0:8080"
+      YOUTUBE_VIDEO_PATH: "/videos"
+    volumes:
+      - type: bind
+        source: "${VIDEO_LIBRARY_PATH:-D:/Dev/KidsTube/KidsTube/Cartoons}"
+        target: /videos
+        read_only: true
