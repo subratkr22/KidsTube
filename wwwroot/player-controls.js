@@ -108,6 +108,14 @@
     else player.pause();
   }
 
+  function toggleFullscreen() {
+    if (document.fullscreenElement) {
+      document.exitFullscreen?.();
+    } else {
+      shell.requestFullscreen?.();
+    }
+  }
+
   function showControls() {
     shell.classList.remove('controls-hidden');
     clearTimeout(hideTimer);
@@ -149,8 +157,7 @@
 
   fullscreen.addEventListener('click', event => {
     event.stopPropagation();
-    if (document.fullscreenElement) document.exitFullscreen?.();
-    else shell.requestFullscreen?.();
+    toggleFullscreen();
   });
 
   progressWrap.addEventListener('pointerdown', event => {
@@ -174,9 +181,20 @@
   });
 
   controls.addEventListener('click', event => event.stopPropagation());
+  controls.addEventListener('dblclick', event => event.stopPropagation());
+
   shell.addEventListener('click', event => {
     if (event.target === player || event.target === shell) togglePlay();
   });
+
+  shell.addEventListener('dblclick', event => {
+    if (event.target !== player && event.target !== shell) return;
+    event.preventDefault();
+    event.stopPropagation();
+    toggleFullscreen();
+    showControls();
+  });
+
   shell.addEventListener('pointermove', showControls);
   shell.addEventListener('pointerleave', () => {
     if (!player.paused && !scrubbing) shell.classList.add('controls-hidden');
@@ -207,8 +225,7 @@
     } else if (event.key.toLowerCase() === 'm') {
       player.muted = !player.muted;
     } else if (event.key.toLowerCase() === 'f') {
-      if (document.fullscreenElement) document.exitFullscreen?.();
-      else shell.requestFullscreen?.();
+      toggleFullscreen();
     }
   });
 
