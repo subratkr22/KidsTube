@@ -21,7 +21,7 @@ COPY --from=build /app/publish ./
 ENV ASPNETCORE_ENVIRONMENT=Production \
     DOTNET_EnableDiagnostics=0 \
     Server__Url=http://0.0.0.0:8080 \
-    YOUTUBE_VIDEO_PATH=/videos
+    VideoLibrary__Path=/videos
 
 EXPOSE 8080
 
