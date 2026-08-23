@@ -4,43 +4,80 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#ffffff" />
-  <title>KidsTube</title>
+  <title>YouTube</title>
   <link rel="stylesheet" href="/styles.css" />
   <link rel="stylesheet" href="/watch.css" />
 </head>
 <body>
   <header class="topbar">
-    <button id="menuButton" class="icon-button menu-button" aria-label="Toggle menu">☰</button>
-    <button id="logoButton" class="logo" aria-label="KidsTube home">
-      <span class="logo-mark">▶</span>
-      <span class="logo-text">KidsTube</span>
-    </button>
+    <div class="topbar-left">
+      <button id="menuButton" class="icon-button menu-button" aria-label="Guide">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h16v1.5H4zm0 5h16V13H4zm0 5h16V18H4z"/></svg>
+      </button>
+      <button id="logoButton" class="logo" aria-label="YouTube Home">
+        <span class="youtube-mark" aria-hidden="true"><span class="play-triangle"></span></span>
+        <span class="youtube-wordmark">YouTube</span>
+      </button>
+    </div>
 
-    <form id="searchForm" class="search" role="search">
-      <input id="searchInput" type="search" placeholder="Search" autocomplete="off" aria-label="Search videos" />
-      <button type="submit" aria-label="Search">⌕</button>
-    </form>
+    <div class="topbar-center">
+      <form id="searchForm" class="search" role="search">
+        <input id="searchInput" type="search" placeholder="Search" autocomplete="off" aria-label="Search" />
+        <button class="search-button" type="submit" aria-label="Search">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m20.87 20.17-5.59-5.59A7.25 7.25 0 1 0 14.2 15.7l5.59 5.59 1.08-1.12ZM5.5 10.5a5 5 0 1 1 10 0 5 5 0 0 1-10 0Z"/></svg>
+        </button>
+      </form>
+      <button class="icon-button mic-button" aria-label="Search with your voice" title="Local library search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14.5a3.5 3.5 0 0 0 3.5-3.5V6a3.5 3.5 0 1 0-7 0v5a3.5 3.5 0 0 0 3.5 3.5Zm-2-8.5a2 2 0 1 1 4 0v5a2 2 0 1 1-4 0V6Zm7.5 5a5.5 5.5 0 0 1-11 0H5a7 7 0 0 0 6.25 6.96V21H8v1.5h8V21h-3.25v-3.04A7 7 0 0 0 19 11h-1.5Z"/></svg>
+      </button>
+    </div>
 
     <div class="top-actions">
-      <span class="offline-badge" title="Videos are played from this computer">● Offline library</span>
-      <button id="rescanButton" class="icon-button" title="Rescan video folder" aria-label="Rescan video folder">↻</button>
+      <button id="rescanButton" class="create-button" title="Rescan local video folder" aria-label="Rescan local video folder">
+        <span class="plus">+</span><span>Rescan</span>
+      </button>
+      <button class="icon-button" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-5.5-1.5-1.75V10a5.5 5.5 0 0 0-4.75-5.45V3.5a.75.75 0 0 0-1.5 0v1.05A5.5 5.5 0 0 0 6.5 10v4.75L5 16.5V18h14v-1.5ZM7.25 16.5l.75-.87V10a4 4 0 0 1 8 0v5.63l.75.87h-9.5Z"/></svg>
+      </button>
+      <div class="profile-avatar" title="Offline profile">Y</div>
     </div>
   </header>
 
   <aside id="sidebar" class="sidebar">
     <nav>
-      <button class="nav-item active" data-action="home"><span>⌂</span>Home</button>
-      <button class="nav-item" data-action="continue"><span>▶</span>Continue watching</button>
-      <button class="nav-item" data-action="random"><span>⤨</span>Play random</button>
+      <button class="nav-item active" data-action="home">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3.3 8 6.2V21h-6v-6H10v6H4V9.5l8-6.2Zm0 1.9L5.5 10.2v9.3h3V13.5h7v6h3v-9.3L12 5.2Z"/></svg>
+        <span>Home</span>
+      </button>
+      <button class="nav-item" data-action="random">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3h4v4h-1.5V5.56l-4.72 4.72-1.06-1.06 4.72-4.72H17V3ZM3 7h4.1c1.4 0 2.3.53 3.15 1.38l5.37 5.37c.85.85 1.76 1.25 3.18 1.25H21v-1.44l-4.72 4.72-1.06-1.06L19.44 13H18.8c-1.83 0-3.12-.57-4.24-1.69L9.2 5.94C8.62 5.36 8.1 5 7.1 5H3V7Zm0 10h4.1c1 0 1.52-.36 2.1-.94l1.36-1.36 1.06 1.06-1.37 1.37C9.4 17.98 8.5 18.5 7.1 18.5H3V17Z"/></svg>
+        <span>Random</span>
+      </button>
+      <button class="nav-item" data-action="continue">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4a8 8 0 1 1-7.72 10H5.9A6.5 6.5 0 1 0 6.4 8.1L9 10.7H3V4.7l2.32 2.32A8 8 0 0 1 12 4Zm-.75 4h1.5v4.3l3 1.72-.75 1.3-3.75-2.17V8Z"/></svg>
+        <span>History</span>
+      </button>
+
+      <div class="nav-divider"></div>
+      <div class="nav-heading">You</div>
+      <button class="nav-item" data-action="continue">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h10v1.5H7V5Zm-2 4h14v1.5H5V9Zm-2 4h18v6H3v-6Zm1.5 1.5v3h15v-3h-15Z"/></svg>
+        <span>Continue watching</span>
+      </button>
+
       <div class="nav-divider"></div>
       <div class="nav-heading">Categories</div>
       <div id="sidebarCategories"></div>
     </nav>
-    <div class="sidebar-footer">Only videos from your approved local folder appear here.</div>
+    <div class="sidebar-footer">
+      <strong>Offline YouTube</strong><br />Only videos from your approved local folder are available.
+    </div>
   </aside>
 
   <main id="homeView" class="main-content">
-    <div id="categoryChips" class="chips"></div>
+    <div class="chips-wrap">
+      <div id="categoryChips" class="chips"></div>
+    </div>
 
     <section id="libraryStatus" class="library-status hidden">
       <div class="status-icon">📁</div>
@@ -59,15 +96,15 @@
     </section>
 
     <section>
-      <div class="section-heading-row">
+      <div class="section-heading-row visually-subtle-heading">
         <h1 id="pageTitle">Home</h1>
         <span id="videoCount" class="muted"></span>
       </div>
       <div id="videoGrid" class="video-grid"></div>
       <div id="emptyState" class="empty-state hidden">
-        <div class="empty-icon">🎬</div>
+        <div class="empty-icon">▶</div>
         <h2>No videos found</h2>
-        <p>Put approved videos in your KidsTube folder and press the rescan button.</p>
+        <p>Add approved videos to your local Cartoons folder and click Rescan.</p>
       </div>
     </section>
   </main>
@@ -79,19 +116,28 @@
         <button id="bigPlayButton" class="big-play hidden" aria-label="Play">▶</button>
       </div>
       <h1 id="watchTitle" class="watch-title"></h1>
-      <div class="watch-meta">
-        <span id="watchCategory" class="category-pill"></span>
-        <span id="watchFileInfo" class="muted"></span>
+      <div class="watch-info-row">
+        <div class="channel-block">
+          <div class="channel-avatar">Y</div>
+          <div class="channel-copy">
+            <strong id="watchCategory">Local Videos</strong>
+            <span id="watchFileInfo" class="muted"></span>
+          </div>
+        </div>
+        <div class="watch-actions">
+          <button id="backHomeButton" class="soft-button">← Home</button>
+          <button id="restartButton" class="soft-button">↺ Restart</button>
+          <button id="randomButton" class="soft-button">⤨ Random</button>
+        </div>
       </div>
-      <div class="watch-actions">
-        <button id="backHomeButton" class="soft-button">← Home</button>
-        <button id="restartButton" class="soft-button">↺ Restart</button>
-        <button id="randomButton" class="soft-button">⤨ Random video</button>
+      <div class="description-box">
+        <strong>Offline video</strong>
+        <p>This video is being streamed directly from your approved local library.</p>
       </div>
     </section>
 
     <aside class="suggestions">
-      <h2>Up next</h2>
+      <div class="up-next-chips"><span class="mini-chip active">All</span><span class="mini-chip">Related</span></div>
       <div id="suggestionList"></div>
     </aside>
   </main>
