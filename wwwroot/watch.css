@@ -2,6 +2,6 @@ body.watch-mode .sidebar {
   display: none;
 }
 
-body.watch-mode .menu-button {
-  visibility: hidden;
+body.watch-mode .chips-wrap {
+  display: none;
 }
