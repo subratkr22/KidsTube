@@ -1,71 +1,64 @@
-# KidsTube
+# YouTube — Offline Local Library
 
-KidsTube is a small local-only video library for children. It gives a familiar YouTube-style browsing and playback experience, but every video is served from a folder on your own Windows computer.
+This is a private/local YouTube-style video library designed to play only videos from an approved folder on your own Windows computer. It does not connect to YouTube, use the YouTube API, show internet videos, ads, recommendations, or external content.
 
-## What V1 does
+## Current local video folder
 
-- Scans an approved local video folder recursively.
-- Shows a responsive video grid with search and categories.
-- Uses subfolders as categories automatically.
-- Streams videos with browser seeking/range requests.
-- Saves playback position in the browser for Continue Watching.
-- Shows suggested local videos on the watch page.
-- Supports random play.
-- Supports optional local thumbnails.
-- Uses no database, cloud service, YouTube API, analytics, CDN, or external JavaScript.
+`D:\Dev\KidsTube\KidsTube\Cartoons`
+
+Subfolders inside `Cartoons` automatically appear as categories.
 
 ## Requirements
 
 - Windows 10/11
 - .NET 8 SDK
-- A modern browser such as Microsoft Edge or Chrome
+- Microsoft Edge or Chrome
 
 MP4 encoded with H.264 video and AAC audio is the most compatible browser format. WebM is also supported. MOV/M4V playback depends on the codecs inside the file.
 
-## Quick start
+## Run
 
-1. Create this folder:
+From the repository folder:
 
-   `D:\KidsVideos`
+```powershell
+dotnet run --project YouTube.csproj
+```
 
-2. Copy your approved videos into it.
+Or double-click:
 
-   Example:
+`run-youtube.bat`
 
-   ```text
-   D:\KidsVideos\
-   ├── Learning\
-   │   ├── ABC.mp4
-   │   └── Numbers.mp4
-   ├── Cartoons\
-   │   ├── Cartoon 01.mp4
-   │   └── Cartoon 02.mp4
-   └── Stories\
-       └── Jungle Story.mp4
-   ```
+Then open:
 
-3. Clone this repository.
+`http://127.0.0.1:5050`
 
-4. From the repository folder, either double-click `run-kidstube.bat` or run:
+## Features
 
-   ```powershell
-   dotnet run
-   ```
-
-5. Open `http://127.0.0.1:5050` if the browser does not open automatically.
+- YouTube-style desktop layout and watch page
+- Local-only video library
+- Recursive folder scanning
+- Folder-based categories
+- Search
+- Random playback
+- Continue watching / playback position
+- Suggested local videos
+- Browser seeking/range streaming
+- Optional local thumbnails
+- No database
+- No cloud service
+- No YouTube API
+- No CDN or external JavaScript
 
 ## Thumbnails
 
-A thumbnail is optional. Put an image next to the video with the same file name.
+Put an image next to a video with the same file name:
 
 ```text
 ABC.mp4
 ABC.jpg
 ```
 
-Supported thumbnail extensions are `.jpg`, `.jpeg`, `.png`, and `.webp`.
-
-If no matching image exists, KidsTube displays a built-in placeholder.
+Supported thumbnail extensions: `.jpg`, `.jpeg`, `.png`, `.webp`.
 
 ## Change the video folder
 
@@ -73,18 +66,12 @@ Edit `appsettings.json`:
 
 ```json
 "VideoLibrary": {
-  "Path": "D:\\KidsVideos"
+  "Path": "D:\\Dev\\KidsTube\\KidsTube\\Cartoons"
 }
 ```
 
-You can also override the folder without editing the project by setting the environment variable `KIDSTUBE_VIDEO_PATH`.
+## Privacy
 
-## Privacy and child safety
+The server binds only to `127.0.0.1`, so it is accessible only from the same computer. The media files stay local and should not be committed to GitHub.
 
-KidsTube itself only binds to `127.0.0.1`, so the web server is accessible from the same computer only.
-
-The application does not contact YouTube or any other internet service. However, KidsTube is not an operating-system parental-control product: a child could still leave the browser tab and use other applications or websites if the Windows account permits it. For a locked-down child setup, combine KidsTube with a restricted Windows account, browser kiosk/full-screen mode, and appropriate network/parental controls.
-
-## Repository note
-
-Do not commit your video library to GitHub. Keep the actual media files in `D:\KidsVideos` or another local folder.
+This project recreates a familiar YouTube-style local browsing experience with its own implementation; it is not affiliated with or endorsed by YouTube or Google.
