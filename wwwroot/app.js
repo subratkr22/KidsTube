@@ -25,6 +25,7 @@ const els = {
   searchInput: document.getElementById('searchInput'),
   sidebar: document.getElementById('sidebar'),
   player: document.getElementById('player'),
+  audioTrack: document.getElementById('audioTrack'),
   watchTitle: document.getElementById('watchTitle'),
   watchCategory: document.getElementById('watchCategory'),
   watchFileInfo: document.getElementById('watchFileInfo'),
@@ -33,6 +34,28 @@ const els = {
 };
 
 const PROGRESS_KEY = 'kidstube-progress-v1';
+
+function dailyRefreshKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function dailyOrder(videos) {
+  const day = dailyRefreshKey();
+  return [...videos].sort((left, right) => {
+    const leftKey = hashString(`${day}:${left.id}`);
+    const rightKey = hashString(`${day}:${right.id}`);
+    return leftKey - rightKey;
+  });
+}
+
+function hashString(value) {
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index++) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
 
 async function api(url, options) {
   const response = await fetch(url, options);
@@ -48,7 +71,7 @@ async function loadLibrary() {
     ]);
 
     state.config = config;
-    state.videos = videos;
+    state.videos = dailyOrder(videos);
     renderLibraryStatus();
     renderCategories();
     renderHome();
@@ -86,6 +109,11 @@ function categories() {
   return ['All', ...new Set(state.videos.map(v => v.category))];
 }
 
+function displayCategory(category) {
+  const words = category.trim().split(/\s+/);
+  return words.length > 2 ? `${words.slice(0, 2).join(' ')}...` : category;
+}
+
 function renderCategories() {
   els.categoryChips.innerHTML = '';
   els.sidebarCategories.innerHTML = '';
@@ -93,7 +121,7 @@ function renderCategories() {
   for (const category of categories()) {
     const chip = document.createElement('button');
     chip.className = `chip${state.category === category ? ' active' : ''}`;
-    chip.textContent = category;
+    chip.textContent = displayCategory(category);
     chip.addEventListener('click', () => selectCategory(category));
     els.categoryChips.appendChild(chip);
 
@@ -101,7 +129,7 @@ function renderCategories() {
       const item = document.createElement('button');
       item.className = 'nav-item';
       item.innerHTML = '<span>▣</span>';
-      item.append(document.createTextNode(category));
+      item.append(document.createTextNode(displayCategory(category)));
       item.addEventListener('click', () => selectCategory(category));
       els.sidebarCategories.appendChild(item);
     }
@@ -137,7 +165,7 @@ function renderHome() {
 
   els.pageTitle.textContent = state.query
     ? `Search results for “${state.query}”`
-    : state.category === 'All' ? 'Home' : state.category;
+    : state.category === 'All' ? 'Home' : displayCategory(state.category);
   els.videoCount.textContent = `${videos.length} video${videos.length === 1 ? '' : 's'}`;
   els.emptyState.classList.toggle('hidden', videos.length !== 0);
 
@@ -172,7 +200,7 @@ function createVideoCard(video, compact = false) {
 
   const meta = document.createElement('div');
   meta.className = 'card-meta';
-  meta.textContent = `${video.category} • ${formatSize(video.sizeBytes)}`;
+  meta.textContent = `${displayCategory(video.category)} • ${formatSize(video.sizeBytes)}`;
 
   body.append(title, meta);
   card.append(thumbnail, body);
@@ -180,6 +208,7 @@ function createVideoCard(video, compact = false) {
   const open = () => openVideo(video.id);
   card.addEventListener('click', open);
   card.addEventListener('keydown', event => {
+    if (event.target !== card) return;
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       open();
@@ -192,6 +221,7 @@ function createVideoCard(video, compact = false) {
 function createThumbnail(video) {
   const wrapper = document.createElement('div');
   wrapper.className = 'thumbnail';
+  wrapper.dataset.videoId = video.id;
 
   const placeholder = document.createElement('div');
   placeholder.className = 'thumbnail-placeholder';
@@ -205,6 +235,62 @@ function createThumbnail(video) {
   img.addEventListener('load', () => placeholder.remove());
   img.addEventListener('error', () => img.remove());
   wrapper.appendChild(img);
+
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/jpeg,image/png,image/webp';
+  input.className = 'thumbnail-file-input';
+  input.setAttribute('aria-label', `Choose a fixed thumbnail for ${video.title}`);
+  input.addEventListener('click', event => event.stopPropagation());
+  input.addEventListener('change', async () => {
+    const file = input.files?.[0];
+    if (!file) return;
+
+    const addButton = wrapper.querySelector('.thumbnail-add-button');
+    if (addButton) addButton.disabled = true;
+    try {
+      const response = await fetch(`/api/videos/${encodeURIComponent(video.id)}/thumbnail`, {
+        method: 'POST',
+        headers: { 'Content-Type': file.type },
+        body: file
+      });
+      if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+
+      document.querySelectorAll('.thumbnail').forEach(thumbnail => {
+        if (thumbnail.dataset.videoId !== video.id) return;
+        thumbnail.dataset.fixedThumbnail = 'true';
+        let image = thumbnail.querySelector('img');
+        if (!image) {
+          image = document.createElement('img');
+          image.alt = '';
+          image.addEventListener('load', () => thumbnail.querySelector('.thumbnail-placeholder')?.remove(), { once: true });
+          thumbnail.appendChild(image);
+        }
+        image.classList.remove('generated-thumbnail');
+        image.src = `${video.thumbnailUrl}?updated=${Date.now()}`;
+      });
+      showToast('Fixed thumbnail saved.');
+    } catch (error) {
+      console.error('Could not save fixed thumbnail', error);
+      showToast('Could not save this thumbnail.');
+    } finally {
+      if (addButton) addButton.disabled = false;
+      input.value = '';
+    }
+  });
+
+  const addButton = document.createElement('button');
+  addButton.type = 'button';
+  addButton.className = 'thumbnail-add-button';
+  addButton.textContent = '+';
+  addButton.title = `Add a fixed thumbnail for ${video.title}`;
+  addButton.setAttribute('aria-label', `Add a fixed thumbnail for ${video.title}`);
+  addButton.addEventListener('click', event => {
+    event.stopPropagation();
+    input.click();
+  });
+  addButton.addEventListener('keydown', event => event.stopPropagation());
+  wrapper.append(input, addButton);
 
   return wrapper;
 }
@@ -228,7 +314,9 @@ function openVideo(id, pushHistory = true) {
   const video = state.videos.find(v => v.id === id);
   if (!video) return;
 
+  const startingWatchSession = !state.currentVideo;
   saveCurrentProgress();
+  if (startingWatchSession) window.YouTubeWatchLimit?.reset?.();
   state.currentVideo = video;
 
   els.homeView.classList.add('hidden');
@@ -237,12 +325,20 @@ function openVideo(id, pushHistory = true) {
   document.body.classList.add('watch-mode');
 
   els.watchTitle.textContent = video.title;
-  els.watchCategory.textContent = video.category;
+  els.watchCategory.textContent = displayCategory(video.category);
   els.watchFileInfo.textContent = `${formatSize(video.sizeBytes)} • Local video`;
 
   els.player.pause();
   els.player.src = video.streamUrl;
   els.player.load();
+  els.audioTrack.pause();
+  if (video.audioUrl) {
+    els.audioTrack.src = video.audioUrl;
+    els.audioTrack.load();
+  } else {
+    els.audioTrack.removeAttribute('src');
+    els.audioTrack.load();
+  }
 
   renderSuggestions(video);
   window.scrollTo({ top: 0, behavior: 'instant' });
@@ -272,7 +368,7 @@ function renderSuggestions(current) {
     title.textContent = video.title;
     const meta = document.createElement('div');
     meta.className = 'card-meta';
-    meta.textContent = video.category;
+    meta.textContent = displayCategory(video.category);
     body.append(title, meta);
     card.appendChild(body);
     card.addEventListener('click', () => openVideo(video.id));
@@ -286,6 +382,9 @@ function showHome(pushHistory = true) {
   els.player.pause();
   els.player.removeAttribute('src');
   els.player.load();
+  els.audioTrack.pause();
+  els.audioTrack.removeAttribute('src');
+  els.audioTrack.load();
   els.watchView.classList.add('hidden');
   els.homeView.classList.remove('hidden');
   els.sidebar.classList.remove('watch-hidden');
@@ -424,7 +523,7 @@ document.getElementById('rescanButton').addEventListener('click', async () => {
     await api('/api/rescan', { method: 'POST' });
     const [config, videos] = await Promise.all([api('/api/config'), api('/api/videos')]);
     state.config = config;
-    state.videos = videos;
+    state.videos = dailyOrder(videos);
     renderLibraryStatus();
     renderCategories();
     renderHome();
@@ -434,6 +533,50 @@ document.getElementById('rescanButton').addEventListener('click', async () => {
     showToast('Rescan failed.');
   }
 });
+
+function promptResetWatchLimit() {
+  const currentMinutes = Number(window.YouTubeWatchLimit?.getLimitMinutes?.() ?? 60);
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  backdrop.innerHTML = `
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="resetWatchLimitTitle">
+      <h3 id="resetWatchLimitTitle">Reset watch limit</h3>
+      <label for="resetWatchLimitSelect">Choose how many minutes to allow each day</label>
+      <select id="resetWatchLimitSelect">
+        ${Array.from({ length: 12 }, (_, index) => 5 + index * 5)
+          .map(minutes => `<option value="${minutes}" ${minutes === currentMinutes ? 'selected' : ''}>${minutes} minutes</option>`)
+          .join('')}
+      </select>
+      <div class="modal-actions">
+        <button type="button" class="secondary-action" data-close="true">Cancel</button>
+        <button type="button" class="primary-action" id="confirmResetWatchLimitButton">Reset</button>
+      </div>
+    </div>
+  `;
+
+  const close = () => backdrop.remove();
+  const select = backdrop.querySelector('#resetWatchLimitSelect');
+
+  backdrop.querySelector('[data-close="true"]').addEventListener('click', close);
+  backdrop.addEventListener('click', event => {
+    if (event.target === backdrop) close();
+  });
+  backdrop.querySelector('#confirmResetWatchLimitButton').addEventListener('click', () => {
+    const minutes = Number(select.value);
+    if (window.YouTubeWatchLimit?.reset) {
+      window.YouTubeWatchLimit.reset(minutes);
+      showToast(`Watch limit reset to ${minutes} minutes.`);
+    } else {
+      showToast('No watch limit is active.');
+    }
+    close();
+  });
+
+  document.body.appendChild(backdrop);
+  select.focus();
+}
+
+document.getElementById('resetWatchLimitButton').addEventListener('click', promptResetWatchLimit);
 
 document.querySelectorAll('[data-action]').forEach(button => {
   button.addEventListener('click', () => {
@@ -449,6 +592,26 @@ document.querySelectorAll('[data-action]').forEach(button => {
 });
 
 els.player.addEventListener('loadedmetadata', restoreProgress);
+els.player.addEventListener('play', () => {
+  if (!els.audioTrack.src) return;
+  els.audioTrack.currentTime = els.player.currentTime;
+  els.audioTrack.play().catch(() => showToast('The separate sound file could not be played.'));
+});
+els.player.addEventListener('pause', () => els.audioTrack.pause());
+els.player.addEventListener('seeking', () => {
+  if (els.audioTrack.src) els.audioTrack.currentTime = els.player.currentTime;
+});
+els.player.addEventListener('ratechange', () => {
+  els.audioTrack.playbackRate = els.player.playbackRate;
+});
+els.player.addEventListener('timeupdate', () => {
+  if (!els.audioTrack.src || !Number.isFinite(els.audioTrack.currentTime)) return;
+  if (Math.abs(els.audioTrack.currentTime - els.player.currentTime) > 0.25) {
+    els.audioTrack.currentTime = els.player.currentTime;
+  }
+});
+els.player.addEventListener('ended', () => els.audioTrack.pause());
+els.audioTrack.addEventListener('error', () => showToast('The separate sound file is not supported by this browser. Use AAC, M4A, MP3, Opus, or WAV.'));
 els.player.addEventListener('timeupdate', () => saveCurrentProgress(false));
 els.player.addEventListener('pause', () => saveCurrentProgress(true));
 els.player.addEventListener('ended', () => {

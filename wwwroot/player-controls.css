@@ -161,6 +161,55 @@
   margin-left: 3px;
 }
 
+.yt-volume-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 11;
+  min-width: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-radius: 8px;
+  background: rgba(0,0,0,.76);
+  color: #fff;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(.96);
+  pointer-events: none;
+  transition: opacity .14s ease, transform .14s ease;
+}
+
+.yt-volume-indicator.visible {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.yt-volume-indicator-label {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.yt-volume-indicator-track,
+.yt-volume-indicator-value {
+  height: 4px;
+  border-radius: 2px;
+}
+
+.yt-volume-indicator-track {
+  width: 136px;
+  overflow: hidden;
+  background: rgba(255,255,255,.35);
+}
+
+.yt-volume-indicator-value {
+  display: block;
+  width: 100%;
+  background: #fff;
+  transition: width .12s ease;
+}
+
 .player-shell:not(.paused) .yt-center-play {
   opacity: 0;
   pointer-events: none;

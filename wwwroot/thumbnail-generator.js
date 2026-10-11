@@ -6,6 +6,16 @@
   const queue = [];
   const maxConcurrent = 2;
   let activeCount = 0;
+  const refreshDay = new Date().toISOString().slice(0, 10);
+
+  function hashString(value) {
+    let hash = 2166136261;
+    for (let index = 0; index < value.length; index++) {
+      hash ^= value.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    return hash >>> 0;
+  }
 
   function videoIdFromThumbnailUrl(src) {
     try {
@@ -18,8 +28,9 @@
   }
 
   function addGeneratedImage(wrapper, dataUrl) {
-    if (!wrapper || !wrapper.isConnected || wrapper.querySelector('img')) return;
+    if (!wrapper || !wrapper.isConnected || wrapper.dataset.fixedThumbnail === 'true' || wrapper.querySelector('.generated-thumbnail')) return;
 
+    wrapper.querySelector('img:not(.generated-thumbnail)')?.remove();
     const placeholder = wrapper.querySelector('.thumbnail-placeholder');
     const img = document.createElement('img');
     img.src = dataUrl;
@@ -32,7 +43,8 @@
   function requestThumbnail(wrapper, id) {
     if (!wrapper || !id) return;
 
-    const cached = thumbnailCache.get(id);
+    const cacheKey = `${refreshDay}:${id}`;
+    const cached = thumbnailCache.get(cacheKey);
     if (cached) {
       addGeneratedImage(wrapper, cached);
       return;
@@ -57,7 +69,7 @@
       generateThumbnail(id)
         .then(dataUrl => {
           if (!dataUrl) return;
-          thumbnailCache.set(id, dataUrl);
+          thumbnailCache.set(`${refreshDay}:${id}`, dataUrl);
           const wrappers = waitingWrappers.get(id) || [];
           wrappers.forEach(wrapper => addGeneratedImage(wrapper, dataUrl));
         })
@@ -147,8 +159,9 @@
       await once(video, 'loadedmetadata');
 
       const duration = Number.isFinite(video.duration) ? video.duration : 0;
+      const framePosition = 0.2 + (hashString(`${refreshDay}:${id}`) % 61) / 100;
       const targetTime = duration > 1
-        ? Math.min(Math.max(duration * 0.5, 0.5), Math.max(0.1, duration - 0.25))
+        ? Math.min(Math.max(duration * framePosition, 0.5), Math.max(0.1, duration - 0.25))
         : 0;
 
       if (targetTime > 0.05) {
@@ -194,5 +207,9 @@
   observer.observe(document.documentElement, {
     childList: true,
     subtree: true
+  });
+
+  document.querySelectorAll('.thumbnail').forEach(wrapper => {
+    requestThumbnail(wrapper, wrapper.dataset.videoId);
   });
 })();

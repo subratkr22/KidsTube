@@ -37,8 +37,16 @@
     </div>
 
     <div class="top-actions">
+      <div id="watchTimeSummary" class="watch-time-summary" role="status" aria-live="polite">
+        <span>Watched</span>
+        <strong id="watchTimeElapsed">0:00</strong>
+        <span id="watchTimeRemaining">60:00 left</span>
+      </div>
       <button id="rescanButton" class="create-button" title="Rescan local video folder" aria-label="Rescan local video folder">
         <span class="plus">+</span><span>Rescan</span>
+      </button>
+      <button id="resetWatchLimitButton" class="create-button secondary-button" title="Reset watch time limit" aria-label="Reset watch time limit">
+        <span>Reset limit</span>
       </button>
       <button class="icon-button" aria-label="Notifications">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-5.5-1.5-1.75V10a5.5 5.5 0 0 0-4.75-5.45V3.5a.75.75 0 0 0-1.5 0v1.05A5.5 5.5 0 0 0 6.5 10v4.75L5 16.5V18h14v-1.5ZM7.25 16.5l.75-.87V10a4 4 0 0 1 8 0v5.63l.75.87h-9.5Z"/></svg>
@@ -117,6 +125,7 @@
     <section class="watch-primary">
       <div class="player-shell">
         <video id="player" playsinline preload="metadata"></video>
+        <audio id="audioTrack" preload="metadata"></audio>
         <button id="bigPlayButton" class="big-play hidden" aria-label="Play">▶</button>
       </div>
       <h1 id="watchTitle" class="watch-title"></h1>
@@ -134,6 +143,15 @@
           <button id="randomButton" class="soft-button">⤨ Random</button>
         </div>
       </div>
+      <form id="watchLimitForm" class="watch-limit-panel">
+        <div>
+          <strong>Watch time</strong>
+          <span>Set 5 to 60 minutes and reset used time.</span>
+        </div>
+        <label for="watchLimitMinutes">Minutes</label>
+        <input id="watchLimitMinutes" type="number" min="5" max="60" step="5" value="60" inputmode="numeric" />
+        <button class="soft-button" type="submit">Reset watch time</button>
+      </form>
       <div class="description-box">
         <strong>Offline video</strong>
         <p>This video is being streamed directly from your approved local library.</p>

@@ -43,7 +43,9 @@ Then open:
 - Continue watching / playback position
 - Suggested local videos
 - Browser seeking/range streaming
+- Browser compatibility conversion for MKV files with DTS/AC3 audio
 - Optional local thumbnails
+- Separate audio files in the same folder (`.aac`, `.m4a`, `.mp3`, `.oga`, `.ogg`, `.opus`, `.wav`)
 - No database
 - No cloud service
 - No YouTube API
@@ -59,6 +61,21 @@ ABC.jpg
 ```
 
 Supported thumbnail extensions: `.jpg`, `.jpeg`, `.png`, `.webp`.
+
+## Separate audio tracks
+
+Keep a separate sound file in the same folder as its video. Use the same filename stem when possible:
+
+```text
+Movie.mkv
+Movie.aac
+```
+
+If the names differ, KidsTube uses the only supported audio file in that folder. The audio track is kept out of the video list and synchronized with playback, seeking, pause, volume, and mute controls.
+
+Recognized audio extensions are `.aac`, `.ac3`, `.dts`, `.eac3`, `.flac`, `.m4a`, `.mka`, `.mp3`, `.oga`, `.ogg`, `.opus`, and `.wav`. Browser playback is most reliable with AAC, M4A, MP3, Opus, or WAV.
+
+For MKV videos, the Docker deployment uses FFmpeg to create a cached MP4 copy with AAC audio. VLC is not required in the browser, and no browser codec extension is needed.
 
 ## Change the video folder
 

@@ -4,8 +4,15 @@
   if (!player || !shell) return;
 
   const STORAGE_KEY = 'youtube-watch-limit-v1';
-  const MAX_WATCH_MS = 40 * 60 * 1000;
+  const DEFAULT_LIMIT_MINUTES = 60;
+  const MIN_LIMIT_MINUTES = 5;
+  const MAX_LIMIT_MINUTES = 60;
   const BLOCK_DURATION_MS = 2 * 60 * 60 * 1000;
+
+  const limitForm = document.getElementById('watchLimitForm');
+  const limitInput = document.getElementById('watchLimitMinutes');
+  const watchedDisplay = document.getElementById('watchTimeElapsed');
+  const remainingDisplay = document.getElementById('watchTimeRemaining');
 
   let state = loadState();
   let lastTickAt = 0;
@@ -17,7 +24,13 @@
   shell.appendChild(spinner);
 
   function defaultState() {
-    return { watchedMs: 0, blockedUntil: 0 };
+    return { watchedMs: 0, blockedUntil: 0, allowanceExpiresAt: 0, limitMinutes: DEFAULT_LIMIT_MINUTES };
+  }
+
+  function normalizeLimitMinutes(value) {
+    const minutes = Number(value);
+    if (!Number.isFinite(minutes)) return DEFAULT_LIMIT_MINUTES;
+    return Math.min(MAX_LIMIT_MINUTES, Math.max(MIN_LIMIT_MINUTES, Math.round(minutes)));
   }
 
   function loadState() {
@@ -25,12 +38,23 @@
       const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
       const loaded = {
         watchedMs: Number.isFinite(parsed.watchedMs) ? Math.max(0, parsed.watchedMs) : 0,
-        blockedUntil: Number.isFinite(parsed.blockedUntil) ? Math.max(0, parsed.blockedUntil) : 0
+        blockedUntil: Number.isFinite(parsed.blockedUntil) ? Math.max(0, parsed.blockedUntil) : 0,
+        allowanceExpiresAt: Number.isFinite(parsed.allowanceExpiresAt) ? Math.max(0, parsed.allowanceExpiresAt) : 0,
+        limitMinutes: normalizeLimitMinutes(parsed.limitMinutes)
       };
 
-      if (loaded.blockedUntil && Date.now() >= loaded.blockedUntil) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultState()));
-        return defaultState();
+      if (!loaded.allowanceExpiresAt && loaded.blockedUntil) {
+        loaded.allowanceExpiresAt = loaded.blockedUntil;
+      } else if (!loaded.allowanceExpiresAt && loaded.watchedMs > 0) {
+        loaded.watchedMs = 0;
+      }
+
+      const now = Date.now();
+      if ((loaded.blockedUntil && now >= loaded.blockedUntil) ||
+          (loaded.allowanceExpiresAt && now >= loaded.allowanceExpiresAt)) {
+        const resetState = { ...loaded, watchedMs: 0, blockedUntil: 0, allowanceExpiresAt: 0 };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(resetState));
+        return resetState;
       }
 
       return loaded;
@@ -43,14 +67,41 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }
 
+  function getLimitMs() {
+    return state.limitMinutes * 60 * 1000;
+  }
+
+  function formatDuration(milliseconds) {
+    const totalSeconds = Math.floor(milliseconds / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return hours
+      ? `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+      : `${minutes}:${String(seconds).padStart(2, '0')}`;
+  }
+
+  function updateWatchTimeDisplay() {
+    if (watchedDisplay) watchedDisplay.textContent = formatDuration(state.watchedMs);
+    if (remainingDisplay) remainingDisplay.textContent = `${formatDuration(Math.max(0, getLimitMs() - state.watchedMs))} left`;
+  }
+
   function isBlocked() {
-    if (state.blockedUntil && Date.now() >= state.blockedUntil) {
-      resetAllowance();
+    const now = Date.now();
+    if ((state.blockedUntil && now >= state.blockedUntil) ||
+        (state.allowanceExpiresAt && now >= state.allowanceExpiresAt)) {
+      state.blockedUntil = 0;
+      state.watchedMs = 0;
+      state.allowanceExpiresAt = 0;
+      saveState();
+      stopTicking();
+      updateWatchTimeDisplay();
     }
-    return state.blockedUntil > Date.now();
+    return state.blockedUntil > now;
   }
 
   function notifyChange() {
+    updateWatchTimeDisplay();
     window.dispatchEvent(new CustomEvent('youtube-watch-limit-changed', {
       detail: {
         blocked: isBlocked(),
@@ -72,16 +123,19 @@
   }
 
   function beginBlock() {
-    state.watchedMs = MAX_WATCH_MS;
+    state.watchedMs = getLimitMs();
     state.blockedUntil = Date.now() + BLOCK_DURATION_MS;
+    state.allowanceExpiresAt = state.blockedUntil;
     saveState();
     stopTicking();
     player.pause();
     applyBlockedUi();
   }
 
-  function resetAllowance() {
-    state = defaultState();
+  function resetAllowance(nextLimitMinutes = state.limitMinutes) {
+    const normalizedLimit = normalizeLimitMinutes(nextLimitMinutes);
+    state = { ...state, watchedMs: 0, blockedUntil: 0, allowanceExpiresAt: 0, limitMinutes: normalizedLimit };
+    if (limitInput) limitInput.value = String(normalizedLimit);
     saveState();
     stopTicking();
     shell.classList.remove('watch-limit-blocked');
@@ -101,18 +155,24 @@
     if (elapsed <= 0) return;
 
     state.watchedMs += elapsed;
-    if (state.watchedMs >= MAX_WATCH_MS) {
+    if (state.watchedMs >= getLimitMs()) {
       beginBlock();
       return;
     }
 
     saveState();
+    updateWatchTimeDisplay();
   }
 
   function startTicking() {
     if (isBlocked()) {
       applyBlockedUi();
       return;
+    }
+
+    if (!state.allowanceExpiresAt) {
+      state.allowanceExpiresAt = Date.now() + BLOCK_DURATION_MS;
+      saveState();
     }
 
     lastTickAt = Date.now();
@@ -197,8 +257,20 @@
     }
   });
 
+  limitForm?.addEventListener('submit', event => {
+    event.preventDefault();
+    const limitMinutes = normalizeLimitMinutes(limitInput?.value);
+    state = { watchedMs: 0, blockedUntil: 0, allowanceExpiresAt: 0, limitMinutes };
+    if (limitInput) limitInput.value = String(limitMinutes);
+    saveState();
+    stopTicking();
+    shell.classList.remove('watch-limit-blocked');
+    notifyChange();
+  });
+
   setInterval(() => {
-    if (state.blockedUntil && Date.now() >= state.blockedUntil) {
+    if ((state.blockedUntil && Date.now() >= state.blockedUntil) ||
+        (state.allowanceExpiresAt && Date.now() >= state.allowanceExpiresAt)) {
       resetAllowance();
     } else if (state.blockedUntil) {
       applyBlockedUi();
@@ -207,9 +279,13 @@
 
   window.YouTubeWatchLimit = {
     isBlocked,
-    getRemainingWatchMs: () => Math.max(0, MAX_WATCH_MS - state.watchedMs),
-    getBlockedUntil: () => state.blockedUntil
+    getRemainingWatchMs: () => Math.max(0, getLimitMs() - state.watchedMs),
+    getBlockedUntil: () => state.blockedUntil,
+    getLimitMinutes: () => state.limitMinutes,
+    reset: resetAllowance
   };
 
+  if (limitInput) limitInput.value = String(state.limitMinutes);
+  updateWatchTimeDisplay();
   applyBlockedUi();
 })();

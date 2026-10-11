@@ -37,6 +37,8 @@ svg { width: 24px; height: 24px; fill: currentColor; display: block; }
 .topbar-left { gap: 14px; min-width: 0; }
 .topbar-center { gap: 12px; width: 100%; justify-self: center; }
 .top-actions { gap: 8px; justify-self: end; }
+.watch-time-summary { display: flex; align-items: baseline; gap: 4px; margin-right: 4px; white-space: nowrap; font-size: 11px; color: var(--muted); }
+.watch-time-summary strong { color: var(--text); font-size: 12px; font-variant-numeric: tabular-nums; }
 
 .icon-button {
   width: 40px;
@@ -137,7 +139,65 @@ svg { width: 24px; height: 24px; fill: currentColor; display: block; }
   cursor: pointer;
 }
 .create-button:hover { background: #e5e5e5; }
+.secondary-button { background: #fff0f0; color: #b42318; }
+.secondary-button:hover { background: #ffe3e2; }
 .create-button .plus { font-size: 28px; line-height: 20px; font-weight: 300; margin-top: -2px; }
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 15, 15, 0.45);
+  display: grid;
+  place-items: center;
+  z-index: 200;
+}
+.modal-card {
+  width: min(420px, calc(100vw - 32px));
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 18px 40px rgba(0,0,0,.18);
+  padding: 20px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.modal-card h3 {
+  margin: 0;
+  font-size: 22px;
+}
+.modal-card label {
+  color: var(--muted);
+  font-size: 13px;
+}
+.modal-card select {
+  width: 100%;
+  height: 40px;
+  border: 1px solid #cfcfcf;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 15px;
+  background: #fff;
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+.modal-actions button {
+  height: 36px;
+  border: 0;
+  border-radius: 10px;
+  padding: 0 14px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.secondary-action {
+  background: #f2f2f2;
+}
+.primary-action {
+  background: #0f0f0f;
+  color: #fff;
+}
 .profile-avatar {
   width: 32px;
   height: 32px;
@@ -272,6 +332,27 @@ svg { width: 24px; height: 24px; fill: currentColor; display: block; }
   color: #777;
   font-size: 32px;
 }
+.thumbnail-file-input { display: none; }
+.thumbnail-add-button {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  z-index: 4;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #fff;
+  font-size: 25px;
+  line-height: 1;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, .9);
+  cursor: pointer;
+}
+.thumbnail-add-button:hover { transform: scale(1.12); }
+.thumbnail-add-button:focus-visible { outline: 2px solid #fff; outline-offset: -3px; }
+.thumbnail-add-button:disabled { opacity: .55; cursor: wait; }
 .thumbnail::after { display: none; }
 .progress-track { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: rgba(0,0,0,.35); }
 .progress-value { height: 100%; background: var(--red); }
@@ -363,6 +444,10 @@ svg { width: 24px; height: 24px; fill: currentColor; display: block; }
 .watch-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
 .soft-button { border: 0; border-radius: 18px; padding: 9px 14px; background: #f2f2f2; font-weight: 600; cursor: pointer; }
 .soft-button:hover { background: #e5e5e5; }
+.watch-limit-panel { display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 12px; border: 1px solid #e5e5e5; border-radius: 8px; background: #fafafa; }
+.watch-limit-panel > div { display: flex; flex: 1; flex-direction: column; gap: 2px; }
+.watch-limit-panel span { color: var(--muted); font-size: 12px; }
+.watch-limit-panel input { width: 58px; border: 1px solid #d0d0d0; border-radius: 4px; padding: 8px 5px; text-align: center; }
 .description-box { margin-top: 14px; padding: 12px; border-radius: 12px; background: #f2f2f2; font-size: 14px; line-height: 20px; }
 .description-box p { margin: 3px 0 0; }
 .suggestions { min-width: 0; }
@@ -407,6 +492,8 @@ svg { width: 24px; height: 24px; fill: currentColor; display: block; }
   .search { margin-left: 4px; }
   .mic-button { display: none; }
   .top-actions .icon-button { display: none; }
+  .watch-time-summary { gap: 2px; margin-right: 0; font-size: 9px; }
+  .watch-time-summary strong { font-size: 10px; }
   .profile-avatar { display: none; }
   .sidebar { width: 240px; transform: translateX(-100%); box-shadow: 3px 0 14px rgba(0,0,0,.14); transition: transform .18s ease; padding: 12px; }
   .sidebar.open { transform: translateX(0); }
@@ -419,5 +506,6 @@ svg { width: 24px; height: 24px; fill: currentColor; display: block; }
   .watch-title, .watch-info-row, .description-box, .suggestions { margin-left: 12px; margin-right: 12px; }
   .watch-info-row { align-items: flex-start; flex-direction: column; }
   .watch-actions { justify-content: flex-start; }
+  .watch-limit-panel { align-items: flex-start; flex-wrap: wrap; margin-left: 12px; margin-right: 12px; }
   .suggestion-card { grid-template-columns: 42% minmax(0,1fr); }
 }

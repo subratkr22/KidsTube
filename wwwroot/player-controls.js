@@ -1,5 +1,6 @@
 (() => {
   const player = document.getElementById('player');
+  const audioTrack = document.getElementById('audioTrack');
   const shell = player?.closest('.player-shell');
   if (!player || !shell) return;
 
@@ -40,7 +41,15 @@
   centerPlay.setAttribute('aria-label', 'Play');
   centerPlay.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
 
-  shell.append(centerPlay, controls);
+  const volumeIndicator = document.createElement('div');
+  volumeIndicator.className = 'yt-volume-indicator';
+  volumeIndicator.setAttribute('role', 'status');
+  volumeIndicator.setAttribute('aria-live', 'polite');
+  volumeIndicator.innerHTML = `
+    <span class="yt-volume-indicator-label"></span>
+    <span class="yt-volume-indicator-track"><span class="yt-volume-indicator-value"></span></span>`;
+
+  shell.append(centerPlay, controls, volumeIndicator);
 
   const playButton = controls.querySelector('.yt-play');
   const muteButton = controls.querySelector('.yt-mute');
@@ -51,8 +60,11 @@
   const played = controls.querySelector('.yt-progress-played');
   const buffered = controls.querySelector('.yt-progress-buffered');
   const knob = controls.querySelector('.yt-progress-knob');
+  const volumeIndicatorLabel = volumeIndicator.querySelector('.yt-volume-indicator-label');
+  const volumeIndicatorValue = volumeIndicator.querySelector('.yt-volume-indicator-value');
 
   let hideTimer = null;
+  let volumeIndicatorTimer = null;
   let scrubbing = false;
 
   const playIcon = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
@@ -81,6 +93,10 @@
 
   function updateVolumeState() {
     const muted = player.muted || player.volume === 0;
+    if (audioTrack) {
+      audioTrack.muted = muted;
+      audioTrack.volume = player.volume;
+    }
     muteButton.innerHTML = muted ? mutedIcon : volumeIcon;
     volume.value = muted ? 0 : player.volume;
   }
@@ -124,6 +140,15 @@
     }
   }
 
+  function showVolumeIndicator() {
+    const percentage = player.muted ? 0 : Math.round(player.volume * 100);
+    volumeIndicatorLabel.textContent = `Volume ${percentage}%`;
+    volumeIndicatorValue.style.width = `${percentage}%`;
+    volumeIndicator.classList.add('visible');
+    clearTimeout(volumeIndicatorTimer);
+    volumeIndicatorTimer = setTimeout(() => volumeIndicator.classList.remove('visible'), 900);
+  }
+
   function seekFromPointer(event) {
     if (!Number.isFinite(player.duration) || player.duration <= 0) return;
     const rect = progressWrap.getBoundingClientRect();
@@ -144,6 +169,7 @@
   muteButton.addEventListener('click', event => {
     event.stopPropagation();
     player.muted = !player.muted;
+    if (audioTrack) audioTrack.muted = player.muted;
     updateVolumeState();
   });
 
@@ -151,7 +177,12 @@
     event.stopPropagation();
     player.volume = Number(volume.value);
     player.muted = player.volume === 0;
+    if (audioTrack) {
+      audioTrack.volume = player.volume;
+      audioTrack.muted = player.muted;
+    }
     updateVolumeState();
+    showVolumeIndicator();
   });
   volume.addEventListener('click', event => event.stopPropagation());
 
@@ -222,6 +253,13 @@
       player.currentTime = Math.min(player.duration || Infinity, player.currentTime + 5);
     } else if (event.key === 'ArrowLeft') {
       player.currentTime = Math.max(0, player.currentTime - 5);
+    } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+      event.preventDefault();
+      const adjustment = event.key === 'ArrowUp' ? 0.05 : -0.05;
+      player.volume = Math.max(0, Math.min(1, player.volume + adjustment));
+      player.muted = player.volume === 0;
+      showControls();
+      showVolumeIndicator();
     } else if (event.key.toLowerCase() === 'm') {
       player.muted = !player.muted;
     } else if (event.key.toLowerCase() === 'f') {
